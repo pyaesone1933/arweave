@@ -355,13 +355,18 @@
 	%% Reconstructed on the receiving side. Not stored in the block files.
 	hash_list = unset,
 	hash_list_merkle = <<>>, % The merkle root of the block index.
-	%% A list of {address, balance, last TX ID} tuples. In the block shadows and
-	%% in the /block/[hash] API endpoint the list is replaced with a hash.
-	%% Reconstructed on the receiving side. Stored in the separate files.
-	wallet_list = [],
-	%% A field for internal use, not serialized. Added to avoid hashing the wallet list
-	%% when the hash was known before the list was reconstructed.
-	wallet_list_hash = not_set,
+	%% The root hash of all the wallets in the weave at this block.
+	%%
+	%% Before 2.2, the hash is the merkle root of an unbalanced binary tree of wallets.
+	%% From 2.2 onwards, wallets are organized as a tree, closely resembling Patricia Merkle trees.
+	%% Each node in the tree stores the hash of its subtree, what allows to efficiently
+	%% recompute the hash of the whole collection - it scales with the number of transactions in
+	%% the block, not with the total number of wallets in the weave. Such a tree has an advantage
+	%% over the binary tree because there is a hard cap on the number of operations which may be
+	%% required for recomputing the root hash after a single insert - 32 (key length) * 2 ^ 8.
+	%% A binary tree, on the other hand, requires periodic rebalancing, otherwise the complexity
+	%% of operations may approach O(number of wallets).
+	wallet_list = unset,
     reward_addr = unclaimed, % Address to credit mining reward or the unclaimed atom.
     tags = [], % Miner specified tags to store with the block.
 	reward_pool = 0, % Current pool of mining rewards.
