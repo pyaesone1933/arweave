@@ -14,7 +14,9 @@ else
 fi
 
 export ERL_EPMD_ADDRESS=127.0.0.1
-export NODE_NAME='arweave@127.0.0.1'
+if [ -e $NODE_NAME ]; then
+    export NODE_NAME='arweave@127.0.0.1';
+fi
 
 while true; do
     echo Launching Erlang Virtual Machine...

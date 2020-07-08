@@ -9,9 +9,13 @@ cd "$SCRIPT_DIR/.."
 
 export ERL_EPMD_ADDRESS=127.0.0.1
 
+if [ -e $NODE_NAME ]; then
+    export NODE_NAME='arweave@127.0.0.1';
+fi
+
 erl -pa `./rebar3 path` \
     -noshell \
     -config config/sys.config \
     -name cleanup-process@127.0.0.1 \
     -setcookie arweave \
-    -run ar_cleanup remove_old_wallet_lists
+    -s ar_cleanup remove_old_wallet_lists $NODE_NAME

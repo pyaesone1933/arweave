@@ -1,6 +1,6 @@
 -module(ar_cleanup).
 
--export([rewrite/0, rewrite/1, remove_old_wallet_lists/0]).
+-export([rewrite/0, rewrite/1, remove_old_wallet_lists/1]).
 
 -include("ar.hrl").
 -include_lib("eunit/include/eunit.hrl").
@@ -26,8 +26,8 @@ rewrite([{H, _, _} | Rest], BI) ->
 	end,
 	rewrite(Rest, BI).
 
-remove_old_wallet_lists() ->
-	DataDir = rpc:call('arweave@127.0.0.1', ar_meta_db, get, [data_dir], 5000),
+remove_old_wallet_lists([NodeName]) ->
+	DataDir = rpc:call(NodeName, ar_meta_db, get, [data_dir], 5000),
 	WalletListDir = filename:join(DataDir, ?WALLET_LIST_DIR),
 	case file:list_dir(WalletListDir) of
 		{ok, Filenames} ->
@@ -42,16 +42,16 @@ remove_old_wallet_lists() ->
 				end,
 				Filenames
 			),
-			remove_old_wallet_lists(WalletListFilepaths);
+			remove_old_wallet_lists2(WalletListFilepaths);
 		{error, Reason} ->
 			io:format("~nFailed to scan the disk, reason ~p", [Reason]),
 			erlang:halt(1)
 	end.
 
-remove_old_wallet_lists(Filepaths) when length(Filepaths) =< ?KEEP_WALLET_LISTS ->
+remove_old_wallet_lists2(Filepaths) when length(Filepaths) =< ?KEEP_WALLET_LISTS ->
 	io:format("~nCurrently less than ~B wallets on disk, nothing to clean.~n~n", [?KEEP_WALLET_LISTS]),
 	erlang:halt(0);
-remove_old_wallet_lists(Filepaths) ->
+remove_old_wallet_lists2(Filepaths) ->
 	SortedFilepaths =
 		lists:sort(
 			fun(A, B) -> filelib:last_modified(A) < filelib:last_modified(B) end,
